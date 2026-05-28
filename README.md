@@ -39,12 +39,14 @@ python chatbot.py
 ```
 
 **Example interaction:**
+```
 You: hello how are you
 Bot: how fine you
 You: what is your name
 Bot: is name your
 You: xyz123
 Bot: I'm not sure how to respond to that.
+```
 
 ---
 
