@@ -1,93 +1,102 @@
+"""
+Rule-Based NLP Chatbot
+A simple chatbot demonstrating core NLP concepts: tokenization,
+vocabulary filtering, unknown word handling, and rule-based response generation.
+"""
+
 import string
 import random
 
 
-# 1. Define a vocabulary (words the bot understands)
-vocabulary = {
+# --- Vocabulary ---
+# The set of words the chatbot recognizes. Any word outside this set
+# is replaced with the [UNK] (unknown) token.
+
+VOCABULARY = {
     "hello", "world", "how", "are", "you", "i", "am", "fine", "thank", "what",
     "is", "your", "name", "my", "bot", "good", "morning", "day"
 }
 
-# 2. Tokenize input text
-def tokenize_text(text):
-    # Convert to lowercase
-    text = text.lower()
 
-    # Remove punctuation
-    translator = str.maketrans('', '', string.punctuation)
-    text = text.translate(translator)
+# --- Co-Occurrence Map ---
+# Defines which words can logically follow others.
+# This acts as the chatbot's rule-based knowledge base.
 
-    # Split into words
-    words = text.split()
-
-    # Replace unknown words with [UNK]
-    tokenized_words = []
-    for word in words:
-        if word in vocabulary:
-            tokenized_words.append(word)
-        else:
-            tokenized_words.append("[UNK]")
-
-    return tokenized_words
-
-
-# 3. Define a co-occurrence map 
-co_occurrence_map = {
-    "hello": ["how", "world", "there"],
-    "how": ["are", "is"],
-    "are": ["you"],
-    "you": ["today", "doing", "too"],
-    "i": ["am", "feel"],
-    "am": ["fine", "good"],
-    "fine": ["thank", "you"],
-    "thank": ["you"],
-    "what": ["is", "your"],
-    "is": ["your", "it"],
-    "your": ["name"],
-    "my": ["name"],
-    "name": ["is"],
-    "bot": ["hello"],
-    "good": ["morning", "day"],
+CO_OCCURRENCE_MAP = {
+    "hello":   ["how", "world", "there"],
+    "how":     ["are", "is"],
+    "are":     ["you"],
+    "you":     ["today", "doing", "too"],
+    "i":       ["am", "feel"],
+    "am":      ["fine", "good"],
+    "fine":    ["thank", "you"],
+    "thank":   ["you"],
+    "what":    ["is", "your"],
+    "is":      ["your", "it"],
+    "your":    ["name"],
+    "my":      ["name"],
+    "name":    ["is"],
+    "bot":     ["hello"],
+    "good":    ["morning", "day"],
     "morning": ["how"],
-    "day": ["how"]
+    "day":     ["how"],
 }
 
 
-# 4. Generate a response based on user input
-def generate_response(prompt):
-    tokenized_prompt = tokenize_text(prompt)
-    generated_words = []
+def tokenize(text: str) -> list[str]:
+    """
+    Tokenize input text into a list of known words.
 
-    for token in tokenized_prompt:
-        if token != "[UNK]" and token in co_occurrence_map:
-            generated_words.append(random.choice(co_occurrence_map[token]))
-        elif token != "[UNK]":
-            generated_words.append(token)
-        # [UNK] tokens are ignored
+    Steps:
+    1. Lowercase the input
+    2. Strip punctuation
+    3. Split into individual word tokens
+    4. Replace any word not in the vocabulary with [UNK]
+    """
+    text = text.lower().translate(str.maketrans("", "", string.punctuation))
 
-    # Return response
-    if generated_words:
-        return " ".join(generated_words)
-    else:
-        return "I'm not sure how to respond to that."
+    return [
+        word if word in VOCABULARY else "[UNK]"
+        for word in text.split()
+    ]
 
 
-# 5. Main program loop
+def generate_response(user_input: str) -> str:
+    """
+    Generate a response by mapping each recognized token to a
+    related word using the co-occurrence map.
+
+    Unknown tokens ([UNK]) are ignored.
+    Returns a fallback message if no valid response can be built.
+    """
+    tokens = tokenize(user_input)
+
+    response_words = [
+        random.choice(CO_OCCURRENCE_MAP[token])
+        for token in tokens
+        if token != "[UNK]" and token in CO_OCCURRENCE_MAP
+    ]
+
+    return " ".join(response_words) if response_words else "I'm not sure how to respond to that."
+
+
 def main():
-    print("Rule-Based Chatbot")
+    """Run the chatbot in an interactive loop."""
+    print("Rule-Based NLP Chatbot")
     print("Type 'exit' to quit.\n")
 
     while True:
-        user_input = input("You: ")
+        user_input = input("You: ").strip()
+
+        if not user_input:
+            continue
 
         if user_input.lower() == "exit":
             print("Bot: Goodbye!")
             break
 
-        response = generate_response(user_input)
-        print("Bot:", response)
+        print(f"Bot: {generate_response(user_input)}")
 
 
-# 6. Run the chatbot
 if __name__ == "__main__":
     main()
